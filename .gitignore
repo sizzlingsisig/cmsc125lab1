@@ -1,0 +1,13 @@
+# Prerequisites
+*.d
+*.o
+
+# The final executable
+mysh
+
+# Editor and System temporary files
+.DS_Store
+.vscode/
+*.swp
+*~
+*.dSYM/
