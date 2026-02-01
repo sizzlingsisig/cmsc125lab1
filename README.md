@@ -28,18 +28,18 @@ Build a Unix shell (`mysh`) that supports:
 ## Implementation Phases
 The development of `mysh` follows an incremental strategy to ensure stability at every step:
 
-### Phase 1: The Skeleton & Parser
+### Phase 1: The Skeleton & Parser (IMPLEMENTED)
 * Implement the main `while` loop and prompt (`mysh> `).
 * Parse user input into tokens using `strtok()`.
 * Handle the `exit` command to terminate the shell cleanly.
 
-### Phase 2: Basic Execution (Foreground)
+### Phase 2: Basic Execution (Foreground) (IMPLEMENTED)
 * Implement the `Command` data structure.
 * Add logic for built-in commands: `cd` (using `chdir`) and `pwd` (using `getcwd`).
 * Implement `fork()` and `execvp()` for external commands.
 * Parent process waits for child completion using `waitpid()`.
 
-### Phase 3: Advanced Parsing
+### Phase 3: Advanced Parsing (IN PROGRESS)
 * Enhance the parser to detect special tokens (`>`, `>>`, `<`, `&`).
 * Populate the `Command` struct with input/output filenames and background flags.
 * Clean arguments passed to `execvp` (removing redirection symbols and filenames).
