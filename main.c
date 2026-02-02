@@ -68,13 +68,23 @@ void parse_input(char *input, Command *cmd)
     // TODO: (PHASE 3) Improve parser to handle special characters like <, >, >>
     while (token != NULL && i < MAX_ARGS - 1)
     {
-        /// 1. Check if token is ">" -> Next token is output_file (append=false)
-        // 2. Check if token is ">>" -> Next token is output_file (append=true)
-        // 3. Check if token is "<" -> Next token is input_file
-        // 4. Check if token is "&" -> Set background=true
-        // 5. ELSE -> cmd->args[i++] = token; (Only add non-special tokens to args)
+        if(strcmp(token, ">") == 0) { // 1. Check if token is ">" -> Next token is output_file (append=false)
+            token = strtok(NULL, " \t");
+            cmd->output_file = token;
+            cmd->append = false;
+        } else if (strcmp(token, ">>") == 0) { // 2. Check if token is ">>" -> Next token is output_file (append=true)
+            token = strtok(NULL, " \t");
+            cmd->output_file = token;
+            cmd->append = true;
+        } else if (strcmp(token, "<") == 0) { // 3. Check if token is "<" -> Next token is input_file
+            token = strtok(NULL, " \t");
+            cmd->input_file = token;
+        } else if(strcmp(token, "&") == 0) { // 4. Check if token is "&" -> Set background=true
+            cmd->background = true;
+        } else { // 5. ELSE -> cmd->args[i++] = token; (Only add non-special tokens to args)
+            cmd->args[i++] = token;
+        }
 
-        cmd->args[i++] = token; // need ni ichange
         token = strtok(NULL, " \t");
     }
     cmd->args[i] = NULL;
