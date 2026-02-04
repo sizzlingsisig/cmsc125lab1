@@ -65,7 +65,6 @@ void parse_input(char *input, Command *cmd)
     char *token = strtok(input, " \t");
     int i = 0;
 
-    // TODO: (PHASE 3) Improve parser to handle special characters like <, >, >>
     while (token != NULL && i < MAX_ARGS - 1)
     {
         if(strcmp(token, ">") == 0) { // 1. Check if token is ">" -> Next token is output_file (append=false)
@@ -141,7 +140,6 @@ void execute_command(Command *cmd)
         else if (pid == 0)
         {
             //TODO: Handle input redirection (PHASE 4)
-
             //TODO: Handle output redirection (PHASE 4)
             execvp(cmd->command, cmd->args);
             fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
@@ -155,6 +153,23 @@ void execute_command(Command *cmd)
         }
         break;
     }
+}
+
+void debug_print_command(Command *cmd) {
+    printf("\n--- DEBUG: PARSER STATUS ---\n");
+    printf("Command:      [%s]\n", cmd->command ? cmd->command : "NULL");
+    
+    printf("Args:         ");
+    for (int i = 0; cmd->args[i] != NULL; i++) {
+        printf("[%s] ", cmd->args[i]);
+    }
+    printf("\n");
+    
+    printf("Input File:   [%s]\n", cmd->input_file ? cmd->input_file : "None");
+    printf("Output File:  [%s]\n", cmd->output_file ? cmd->output_file : "None");
+    printf("Append Mode:  [%s]\n", cmd->append ? "YES" : "NO");
+    printf("Background:   [%s]\n", cmd->background ? "YES" : "NO");
+    printf("----------------------------\n\n");
 }
 
 int main()
@@ -180,6 +195,7 @@ int main()
             continue;
 
         parse_input(input, &cmd);
+        debug_print_command(&cmd);
         execute_command(&cmd);
     }
 
