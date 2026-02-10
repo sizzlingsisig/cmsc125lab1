@@ -54,8 +54,7 @@ CommandType get_command_type(const char command[])
     return CMD_EXTERNAL;
 }
 
-//TODO: handle edge cases where I/O redirection symbols are at the end of the command
-//TODO: Phase 6 - Handle backslash escape characters (e.g., "\ ")
+//TODO: Phase 6 - Handle backslash escape char`cters (e.g., "\ ")
 //TODO: Move parser to separate parser.c file
 /**
  * @brief Parses raw input into a Command struct.
@@ -71,6 +70,7 @@ void parse_input(char *input, Command *cmd)
     char *token = strtok(input, " \t");
     int i = 0;
 
+    
     while (token != NULL && i < MAX_ARGS - 1)
     {
         if (strcmp(token, ">") == 0)
@@ -78,17 +78,38 @@ void parse_input(char *input, Command *cmd)
             token = strtok(NULL, " \t");
             cmd->output_file = token;
             cmd->append = false;
+
+            if (token == NULL)
+            {
+                fprintf(stderr, "mysh: syntax error near unexpected token\n");
+                return;
+            }
+            cmd->output_file = token;
         }
         else if (strcmp(token, ">>") == 0)
         { // 2. Check if token is ">>" -> Next token is output_file (append=true)
             token = strtok(NULL, " \t");
             cmd->output_file = token;
             cmd->append = true;
+
+             if (token == NULL)
+            {
+                fprintf(stderr, "mysh: syntax error near unexpected token\n");
+                return;
+            }
+            cmd->output_file = token;
         }
         else if (strcmp(token, "<") == 0)
         { // 3. Check if token is "<" -> Next token is input_file
             token = strtok(NULL, " \t");
             cmd->input_file = token;
+
+             if (token == NULL)
+            {
+                fprintf(stderr, "mysh: syntax error near unexpected token\n");
+                return;
+            }
+            cmd->output_file = token;
         }
         else if (strcmp(token, "&") == 0)
         { // 4. Check if token is "&" -> Set background=true
@@ -233,9 +254,16 @@ void execute_external_command(Command *cmd)
     // Parent process
     else
     {
-        // TODO: Handle background jobs (PHASE 5)
-        int status;
-        waitpid(pid, &status, 0);
+        if (cmd->background)
+        {
+            printf("[job %d] %d\n", pid, pid);
+            // no wait — return immediately
+        }
+        else
+        {
+            int status;
+            waitpid(pid, &status, 0);
+        }
     }
 }
 
@@ -277,6 +305,17 @@ void debug_print_command(Command *cmd)
     printf("----------------------------\n\n");
 }
 
+void reap_background_processes(void) 
+{
+    int status;
+    pid_t pid;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+    {
+        printf("[job %d] finished\n", pid);
+    }
+}
+
 int main()
 {
     char input[MAX_CMD_LEN];
@@ -285,7 +324,8 @@ int main()
     // This is the REPL of the shell
     while (1)
     {
-        // TODO: Check for Zombie processes (PHASE 5)
+        reap_background_processes();
+
         printf("mysh> ");
         fflush(stdout);
 
