@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 // TODO: Maybe move constants to a header file
 #define MAX_CMD_LEN 1024
@@ -40,8 +41,7 @@ typedef enum
  * @param command Command name string.
  * @return CommandType enum value.
  */
-// FIXME: Use array of structs for input
-CommandType get_command_type(char *command)
+CommandType get_command_type(const char command[])
 {
     if (strcmp(command, "exit") == 0)
         return CMD_EXIT;
@@ -105,12 +105,79 @@ void parse_input(char *input, Command *cmd)
 }
 
 /**
+ * @brief Handles input and output redirection based on the Command struct.
+ * @param cmd Pointer to the parsed command.
+ */
+void handle_redirection(Command *cmd)
+{
+    if (cmd->input_file != NULL)
+    {
+        int input_fd = open(cmd->input_file, O_RDONLY);
+        if (input_fd < 0)
+        {
+            perror("mysh: input redirection error");
+            exit(1);
+        }
+
+        if (dup2(input_fd, STDIN_FILENO) < 0)
+        {
+            perror("mysh: dup2 input failed");
+            exit(1);
+        }
+
+        close(input_fd);
+    }
+
+    if (cmd->output_file != NULL)
+    {
+        int flags;
+        // FIXME: replace magic number
+        mode_t mode = 0644;
+
+        /**
+         * Case: >> (append mode)
+         * O_WRONLY: Open for writing only.
+         * O_CREAT: Create the file if it does not exist.
+         * O_APPEND: Append to the end of the file if it exists (for >>).
+         */
+        if (cmd->append)
+        {
+            flags = O_WRONLY | O_CREAT | O_APPEND;
+        }
+        /**
+         * Case: > (truncate mode)
+         * O_WRONLY: Open for writing only.
+         * O_CREAT: Create the file if it does not exist.
+         * O_TRUNC: Truncate the file to zero length if it already exists (for >).
+         */
+        else
+        {
+            flags = O_WRONLY | O_CREAT | O_TRUNC;
+        }
+
+        int output_fd = open(cmd->output_file, flags, mode);
+        if (output_fd < 0)
+        {
+            perror("mysh: output redirection error");
+            exit(1);
+        }
+
+        // Redirect Standard Output (1) to this file
+        if (dup2(output_fd, STDOUT_FILENO) < 0)
+        {
+            perror("mysh: dup2 output failed");
+            exit(1);
+        }
+
+        close(output_fd);
+    }
+}
+/**
  * @brief Executes the command found in the Command struct.
  * @param cmd Pointer to the parsed command.
  */
 void execute_command(Command *cmd)
 {
-    // Empty input check
     if (cmd->command == NULL)
         return;
 
@@ -127,12 +194,13 @@ void execute_command(Command *cmd)
         }
         else if (chdir(cmd->args[1]) != 0)
         {
-            //FIXME: remove perror since this is success
+            // FIXME: remove perror since this is success
             perror("mysh");
         }
         break;
 
     case CMD_PWD:
+        // FIXME: Use the standard constant
         char cwd[MAX_CMD_LEN];
         if (getcwd(cwd, sizeof(cwd)) != NULL)
         {
@@ -140,7 +208,6 @@ void execute_command(Command *cmd)
         }
         else
         {
-            //FIXME: remove perror since this is success
             perror("getcwd() error");
         }
         break;
@@ -153,8 +220,7 @@ void execute_command(Command *cmd)
         }
         else if (pid == 0)
         {
-            // TODO: Handle input redirection (PHASE 4)
-            // TODO: Handle output redirection (PHASE 4)
+            handle_redirection(cmd);
             execvp(cmd->command, cmd->args);
             fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
             exit(127);
@@ -173,10 +239,8 @@ void debug_print_command(Command *cmd)
 {
     printf("\n--- DEBUG: PARSER STATUS ---\n");
     printf("Command:      [%s]\n", cmd->command ? cmd->command : "NULL");
-
-    // FIXME: start at i=1
     printf("Args:         ");
-    for (int i = 0; cmd->args[i] != NULL; i++)
+    for (int i = 1; cmd->args[i] != NULL; i++)
     {
         printf("[%s] ", cmd->args[i]);
     }
