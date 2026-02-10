@@ -40,6 +40,7 @@ typedef enum
  * @param command Command name string.
  * @return CommandType enum value.
  */
+// FIXME: Use array of structs for input
 CommandType get_command_type(char *command)
 {
     if (strcmp(command, "exit") == 0)
@@ -61,26 +62,35 @@ void parse_input(char *input, Command *cmd)
     memset(cmd, 0, sizeof(Command));
 
     input[strcspn(input, "\n")] = 0;
-
+    // FIXME: \C \K handling
     char *token = strtok(input, " \t");
     int i = 0;
 
     while (token != NULL && i < MAX_ARGS - 1)
     {
-        if(strcmp(token, ">") == 0) { // 1. Check if token is ">" -> Next token is output_file (append=false)
+        if (strcmp(token, ">") == 0)
+        { // 1. Check if token is ">" -> Next token is output_file (append=false)
             token = strtok(NULL, " \t");
             cmd->output_file = token;
             cmd->append = false;
-        } else if (strcmp(token, ">>") == 0) { // 2. Check if token is ">>" -> Next token is output_file (append=true)
+        }
+        else if (strcmp(token, ">>") == 0)
+        { // 2. Check if token is ">>" -> Next token is output_file (append=true)
             token = strtok(NULL, " \t");
             cmd->output_file = token;
             cmd->append = true;
-        } else if (strcmp(token, "<") == 0) { // 3. Check if token is "<" -> Next token is input_file
+        }
+        else if (strcmp(token, "<") == 0)
+        { // 3. Check if token is "<" -> Next token is input_file
             token = strtok(NULL, " \t");
             cmd->input_file = token;
-        } else if(strcmp(token, "&") == 0) { // 4. Check if token is "&" -> Set background=true
+        }
+        else if (strcmp(token, "&") == 0)
+        { // 4. Check if token is "&" -> Set background=true
             cmd->background = true;
-        } else { // 5. ELSE -> cmd->args[i++] = token; (Only add non-special tokens to args)
+        }
+        else
+        { // 5. ELSE -> cmd->args[i++] = token; (Only add non-special tokens to args)
             cmd->args[i++] = token;
         }
 
@@ -89,7 +99,9 @@ void parse_input(char *input, Command *cmd)
     cmd->args[i] = NULL;
 
     if (i > 0)
+    {
         cmd->command = cmd->args[0];
+    }
 }
 
 /**
@@ -115,6 +127,7 @@ void execute_command(Command *cmd)
         }
         else if (chdir(cmd->args[1]) != 0)
         {
+            //FIXME: remove perror since this is success
             perror("mysh");
         }
         break;
@@ -127,6 +140,7 @@ void execute_command(Command *cmd)
         }
         else
         {
+            //FIXME: remove perror since this is success
             perror("getcwd() error");
         }
         break;
@@ -139,15 +153,15 @@ void execute_command(Command *cmd)
         }
         else if (pid == 0)
         {
-            //TODO: Handle input redirection (PHASE 4)
-            //TODO: Handle output redirection (PHASE 4)
+            // TODO: Handle input redirection (PHASE 4)
+            // TODO: Handle output redirection (PHASE 4)
             execvp(cmd->command, cmd->args);
             fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
             exit(127);
         }
         else
         {
-            //TODO: Handle background jobs (PHASE 5)
+            // TODO: Handle background jobs (PHASE 5)
             int status;
             waitpid(pid, &status, 0);
         }
@@ -155,16 +169,19 @@ void execute_command(Command *cmd)
     }
 }
 
-void debug_print_command(Command *cmd) {
+void debug_print_command(Command *cmd)
+{
     printf("\n--- DEBUG: PARSER STATUS ---\n");
     printf("Command:      [%s]\n", cmd->command ? cmd->command : "NULL");
-    
+
+    // FIXME: start at i=1
     printf("Args:         ");
-    for (int i = 0; cmd->args[i] != NULL; i++) {
+    for (int i = 0; cmd->args[i] != NULL; i++)
+    {
         printf("[%s] ", cmd->args[i]);
     }
     printf("\n");
-    
+
     printf("Input File:   [%s]\n", cmd->input_file ? cmd->input_file : "None");
     printf("Output File:  [%s]\n", cmd->output_file ? cmd->output_file : "None");
     printf("Append Mode:  [%s]\n", cmd->append ? "YES" : "NO");
@@ -180,7 +197,7 @@ int main()
     // This is the REPL of the shell
     while (1)
     {
-        //TODO: Check for Zombie processes (PHASE 5)
+        // TODO: Check for Zombie processes (PHASE 5)
         printf("mysh> ");
         fflush(stdout);
 
