@@ -33,7 +33,11 @@ typedef enum
     CMD_EXTERNAL
 } CommandType;
 
+// Parser Functions (in parser.c)
 void parse_input(char *input, Command *cmd);
+void debug_print_command(Command *cmd);
+
+// Executor Functions (in executor.c)
 void execute_command(Command *cmd);
 void reap_background_processes(void);
 
