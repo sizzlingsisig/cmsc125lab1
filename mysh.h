@@ -35,5 +35,6 @@ typedef enum
 
 void parse_input(char *input, Command *cmd);
 void execute_command(Command *cmd);
+void reap_background_processes(void);
 
 #endif // MYSH_H

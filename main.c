@@ -1,34 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <linux/limits.h>
 #include "mysh.h"
-
-
-/**
- * @brief Determines the type of command.
- * @param command Command name string.
- * @return CommandType enum value.
- */
-CommandType get_command_type(const char command[])
-{
-    if (strcmp(command, "exit") == 0)
-    {
-        return CMD_EXIT;
-    }
-    if (strcmp(command, "cd") == 0)
-    {
-        return CMD_CD;
-    }
-    if (strcmp(command, "pwd") == 0)
-    {
-        return CMD_PWD;
-    }
-    return CMD_EXTERNAL;
-}
+#include "executor.c"
 
 // TODO: Phase 6 - Handle backslash escape char`cters (e.g., "\ ")
 // TODO: Move parser to separate parser.c file
@@ -102,165 +76,6 @@ void parse_input(char *input, Command *cmd)
     }
 }
 
-// TODO: Move execution logic to separate execution.c file
-/**
- * @brief Generic helper to open a file and dup2 it to a target file descriptor.
- */
-void redirect_fd(const char *filename, int flags, int target_fd)
-{
-    if (filename == NULL)
-        return;
-
-    int fd = open(filename, flags, DEFAULT_FILE_MODE);
-    if (fd < 0)
-    {
-        perror("mysh: redirection error");
-        exit(1);
-    }
-
-    if (dup2(fd, target_fd) < 0)
-    {
-        perror("mysh: dup2 failed");
-        exit(1);
-    }
-
-    close(fd);
-}
-
-/**
- * @brief Handles all IO redirection for a command.
- */
-void handle_redirections(Command *cmd)
-{
-    // Handle Input (<)
-    redirect_fd(cmd->input_file, O_RDONLY, STDIN_FILENO);
-
-    // Handle Output (> or >>)
-    if (cmd->output_file != NULL)
-    {
-        int flags = O_WRONLY | O_CREAT;
-
-        // Decide between Append (>>) or Truncate (>)
-        if (cmd->append)
-            flags |= O_APPEND;
-        else
-            flags |= O_TRUNC;
-
-        redirect_fd(cmd->output_file, flags, STDOUT_FILENO);
-    }
-}
-
-/**
- * @brief Handles built-in commands (cd, exit, pwd).
- * @return true if the command was a built-in and executed, false otherwise.
- */
-bool execute_builtin_command(Command *cmd)
-{
-    switch (get_command_type(cmd->command))
-    {
-
-    case CMD_EXIT:
-        printf("Exiting shell...\n");
-        exit(0);
-
-    case CMD_CD:
-    { // Prints error if no argument is provided
-        if (cmd->args[1] == NULL)
-        {
-            fprintf(stderr, "mysh: expected argument to \"cd\"\n");
-        }
-
-        else
-        {
-            int result = chdir(cmd->args[1]);
-            if (result != 0)
-            {
-                perror("mysh cd error");
-            }
-        }
-        return true;
-    }
-
-    case CMD_PWD:
-    {
-        char cwd[PATH_MAX];
-        char *result = getcwd(cwd, sizeof(cwd));
-
-        if (result != NULL)
-        {
-            printf("%s\n", cwd);
-        }
-        else
-        {
-            perror("getcwd() error");
-        }
-        return true;
-    }
-
-    case CMD_EXTERNAL:
-    default:
-        return false;
-    }
-}
-
-/**
- * @brief Handles external commands using fork, exec, wait.
- */
-void execute_external_command(Command *cmd)
-{
-    pid_t pid = fork();
-
-    // OS fails to create process
-    if (pid < 0)
-    {
-        perror("fork failed");
-    }
-    // Child process
-    else if (pid == 0)
-    {
-        handle_redirections(cmd);
-        execvp(cmd->command, cmd->args);
-
-        // Error handling if exec fails
-        fprintf(stderr, "mysh: command not found: %s\n", cmd->command);
-        exit(127);
-    }
-    // Parent process
-    else
-    {
-        if (cmd->background)
-        {
-            printf("[job %d] %d\n", pid, pid);
-            // no wait — return immediately
-        }
-        else
-        {
-            int status;
-            waitpid(pid, &status, 0);
-        }
-    }
-}
-
-// TODO: Ensure that pressing Ctrl+C (SIGINT) in the shell doesn't kill the shell itself but correctly interrupts the foreground child process.
-/**
- * @brief Makes decision on what type of command to execute.
- */
-void execute_command(Command *cmd)
-{
-    // returns if no command was parsed
-    if (cmd->command == NULL)
-    {
-        return;
-    }
-
-    if (execute_builtin_command(cmd))
-    {
-        return;
-    }
-
-    execute_external_command(cmd);
-}
-
 void debug_print_command(Command *cmd)
 {
     printf("\n--- DEBUG: PARSER STATUS ---\n");
@@ -279,16 +94,6 @@ void debug_print_command(Command *cmd)
     printf("----------------------------\n\n");
 }
 
-void reap_background_processes(void)
-{
-    int status;
-    pid_t pid;
-
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-    {
-        printf("[job %d] finished\n", pid);
-    }
-}
 
 int main()
 {
