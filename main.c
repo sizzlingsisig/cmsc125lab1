@@ -46,16 +46,22 @@ typedef enum
 CommandType get_command_type(const char command[])
 {
     if (strcmp(command, "exit") == 0)
+    {
         return CMD_EXIT;
+    }
     if (strcmp(command, "cd") == 0)
+    {
         return CMD_CD;
+    }
     if (strcmp(command, "pwd") == 0)
+    {
         return CMD_PWD;
+    }
     return CMD_EXTERNAL;
 }
 
-//TODO: Phase 6 - Handle backslash escape char`cters (e.g., "\ ")
-//TODO: Move parser to separate parser.c file
+// TODO: Phase 6 - Handle backslash escape char`cters (e.g., "\ ")
+// TODO: Move parser to separate parser.c file
 /**
  * @brief Parses raw input into a Command struct.
  * @param input Raw input string from fgets.
@@ -66,22 +72,20 @@ void parse_input(char *input, Command *cmd)
     memset(cmd, 0, sizeof(Command));
 
     input[strcspn(input, "\n")] = 0;
-    // FIXME: \C \K handling
     char *token = strtok(input, " \t");
     int i = 0;
 
-    
     while (token != NULL && i < MAX_ARGS - 1)
     {
         if (strcmp(token, ">") == 0)
         { // 1. Check if token is ">" -> Next token is output_file (append=false)
             token = strtok(NULL, " \t");
-            cmd->output_file = token;
             cmd->append = false;
 
             if (token == NULL)
             {
                 fprintf(stderr, "mysh: syntax error near unexpected token\n");
+                cmd->command = NULL;
                 return;
             }
             cmd->output_file = token;
@@ -89,10 +93,9 @@ void parse_input(char *input, Command *cmd)
         else if (strcmp(token, ">>") == 0)
         { // 2. Check if token is ">>" -> Next token is output_file (append=true)
             token = strtok(NULL, " \t");
-            cmd->output_file = token;
             cmd->append = true;
 
-             if (token == NULL)
+            if (token == NULL)
             {
                 fprintf(stderr, "mysh: syntax error near unexpected token\n");
                 return;
@@ -104,12 +107,11 @@ void parse_input(char *input, Command *cmd)
             token = strtok(NULL, " \t");
             cmd->input_file = token;
 
-             if (token == NULL)
+            if (token == NULL)
             {
                 fprintf(stderr, "mysh: syntax error near unexpected token\n");
                 return;
             }
-            cmd->output_file = token;
         }
         else if (strcmp(token, "&") == 0)
         { // 4. Check if token is "&" -> Set background=true
@@ -130,8 +132,7 @@ void parse_input(char *input, Command *cmd)
     }
 }
 
-
-//TODO: Move execution logic to separate execution.c file
+// TODO: Move execution logic to separate execution.c file
 /**
  * @brief Generic helper to open a file and dup2 it to a target file descriptor.
  */
@@ -193,7 +194,7 @@ bool execute_builtin_command(Command *cmd)
         exit(0);
 
     case CMD_CD:
-        // Prints error if no argument is provided
+    { // Prints error if no argument is provided
         if (cmd->args[1] == NULL)
         {
             fprintf(stderr, "mysh: expected argument to \"cd\"\n");
@@ -208,8 +209,10 @@ bool execute_builtin_command(Command *cmd)
             }
         }
         return true;
+    }
 
     case CMD_PWD:
+    {
         char cwd[PATH_MAX];
         char *result = getcwd(cwd, sizeof(cwd));
 
@@ -222,6 +225,7 @@ bool execute_builtin_command(Command *cmd)
             perror("getcwd() error");
         }
         return true;
+    }
 
     case CMD_EXTERNAL:
     default:
@@ -267,7 +271,7 @@ void execute_external_command(Command *cmd)
     }
 }
 
-//TODO: Ensure that pressing Ctrl+C (SIGINT) in the shell doesn't kill the shell itself but correctly interrupts the foreground child process.
+// TODO: Ensure that pressing Ctrl+C (SIGINT) in the shell doesn't kill the shell itself but correctly interrupts the foreground child process.
 /**
  * @brief Makes decision on what type of command to execute.
  */
@@ -305,7 +309,7 @@ void debug_print_command(Command *cmd)
     printf("----------------------------\n\n");
 }
 
-void reap_background_processes(void) 
+void reap_background_processes(void)
 {
     int status;
     pid_t pid;
@@ -340,7 +344,7 @@ int main()
             continue;
 
         parse_input(input, &cmd);
-        debug_print_command(&cmd);
+        // debug_print_command(&cmd);
         execute_command(&cmd);
     }
 
