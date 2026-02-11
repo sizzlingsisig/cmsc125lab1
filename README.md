@@ -1,7 +1,7 @@
 # CMSC 125 Lab 1: Unix Shell (mysh)
 
 **Course:** CMSC 125 - Operating Systems  
-**Instructor:** [Instructor Name]  
+**Instructor:** Rene Jocsing  
 
 **Group Members:**
 * Christian Joseph Hernia
@@ -24,6 +24,7 @@ Build a Unix shell (`mysh`) that supports:
 * **External Command Execution:** Running system programs (e.g., `ls`, `grep`) using child processes.
 * **I/O Redirection:** Redirecting standard input and output using file descriptors.
 * **Background Execution:** Running processes asynchronously using the `&` operator and preventing zombie processes.
+* **Error Handling:** Graceful handling of syntax errors, missing files, and permission denied errors.
 
 ## Implementation Phases
 The development of `mysh` follows an incremental strategy to ensure stability at every step:
@@ -63,3 +64,32 @@ The development of `mysh` follows an incremental strategy to ensure stability at
 **To compile:**
 ```bash
 make
+```
+**Running the shell**
+```bash
+./mysh
+```
+
+**Clean**
+```bash
+make clean
+```
+
+## Usage Examples
+```bash
+mysh> ls -l > output.txt      # Redirect output to file
+mysh> grep "code" < main.c    # Read input from file
+mysh> sleep 5 &               # Run in background
+[job 12345] 12345
+mysh> cd /tmp                 # Change directory
+```
+
+## Known Limitations
+- Piping: The pipe operator (|) is not currently supported.
+ - Command History: Arrow key navigation for previous commands is not implemented.
+ - String Quoting: Arguments inside quotes (e.g., echo "hello world") are split into separate arguments rather than treated as a single string.
+
+ ## Screenshots
+ 1. Compilation and Basic Commands
+ 
+ 2. Redirection and Background Processing
