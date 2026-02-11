@@ -39,22 +39,22 @@ The development of `mysh` follows an incremental strategy to ensure stability at
 * Implement `fork()` and `execvp()` for external commands.
 * Parent process waits for child completion using `waitpid()`.
 
-### Phase 3: Advanced Parsing (IN PROGRESS)
+### Phase 3: Advanced Parsing (IMPLEMENTED)
 * Enhance the parser to detect special tokens (`>`, `>>`, `<`, `&`).
 * Populate the `Command` struct with input/output filenames and background flags.
 * Clean arguments passed to `execvp` (removing redirection symbols and filenames).
 
-### Phase 4: I/O Redirection
+### Phase 4: I/O Redirection (IMPLEMENTED)
 * Implement file opening with correct flags (`O_RDONLY`, `O_CREAT`, `O_TRUNC`, `O_APPEND`).
 * Use `dup2()` in the child process to redirect `STDIN_FILENO` and `STDOUT_FILENO`.
 * Ensure proper closing of unused file descriptors to prevent leaks.
 
-### Phase 5: Background Processing
+### Phase 5: Background Processing (IMPLEMENTED)
 * Implement logic to skip `waitpid()` if the background flag is set.
 * Print job ID and PID upon starting a background job.
 * Implement a "reaper" function using `waitpid(..., WNOHANG)` to clean up zombie processes at the start of every loop iteration.
 
-### Phase 6: Polish & Testing
+### Phase 6: Polish & Testing (IMPLEMENTED)
 * Handle edge cases (empty input, multiple spaces).
 * Add error handling for failed system calls (e.g., `fork` failing, file not found).
 * Verify against the `bash` shell behavior.

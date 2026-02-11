@@ -54,12 +54,12 @@ We have adopted a modular architecture that separates data storage, parsing, and
 
 *Phase 4*
     Description: I/O Redirection (open, dup2 logic)
-    Status: **Pending - Week 2**
+    Status: **Completed - Week 2**
 
 *Phase 5*
     Description: Background Processing (Zombie reaper, & logic)
-    Status: **Pending - Week 2**
+    Status: **Completed - Week 2**
 
 *Phase 6*
 Description: Polish, Edge Case Testing & Documentation
-    Status: **Pending - Week 2**
+    Status: **Completed - Week 2**
