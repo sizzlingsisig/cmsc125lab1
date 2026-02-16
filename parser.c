@@ -3,8 +3,7 @@
 #include <string.h>
 #include "mysh.h"
 
-// TODO: Phase 6 - Handle backslash escape char`cters (e.g., "\ ")
-// TODO: Move parser to separate parser.c file
+// TODO: Make token persist in next job, make it return pointer to command, maybe make a copy of token
 /**
  * @brief Parses raw input into a Command struct.
  * @param input Raw input string from fgets.
@@ -12,6 +11,7 @@
  */
 void parse_input(char *input, Command *cmd)
 {
+
     memset(cmd, 0, sizeof(Command));
 
     input[strcspn(input, "\n")] = 0;

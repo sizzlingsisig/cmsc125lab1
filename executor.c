@@ -123,7 +123,6 @@ void execute_external_command(Command *cmd)
     }
 }
 
-// TODO: Ensure that pressing Ctrl+C (SIGINT) in the shell doesn't kill the shell itself but correctly interrupts the foreground child process.
 /**
  * @brief Makes decision on what type of command to execute.
  */
@@ -134,6 +133,7 @@ void execute_command(Command *cmd)
     execute_external_command(cmd);
 }
 
+// make array of job pids and reap them in the main loop
 void reap_background_processes(void)
 {
     int status;
