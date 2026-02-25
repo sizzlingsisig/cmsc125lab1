@@ -5,10 +5,11 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <linux/limits.h>
+#include <signal.h>
 #include "mysh.h"
 
-#define MAX_BG_JOBS 100
 pid_t bg_pids[MAX_BG_JOBS] = {0};
+
 
 /**
  * @brief Determines the type of command.
@@ -67,7 +68,21 @@ bool execute_builtin_command(Command *cmd)
     {
     case CMD_EXIT:
         printf("Exiting shell...\n");
+        
+        // Clean up all active background jobs before the shell dies
+        for (int i = 0; i < MAX_BG_JOBS; i++)
+            {
+                if (bg_pids[i] > 0)
+                {
+                    // Send signal to terminate the background process
+                    kill(bg_pids[i], SIGTERM); 
+                    
+                    // Reap the zombie so it's fully removed from the OS table
+                    waitpid(bg_pids[i], NULL, WNOHANG);
+                }
+            }
         exit(0);
+        return true;
 
     case CMD_CD:
         if (cmd->args[1] == NULL)
