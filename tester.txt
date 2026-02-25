@@ -1,0 +1,89 @@
+I. Basic Functionality & Built-ins
+These tests ensure your core process creation and shell environment management are working.
+
+Interactive Loop & External Execution
+
+Input: ./mysh followed by ls -l.
+
+Expected: Directory listing appears, and the mysh> prompt returns immediately after.
+
+Built-in: Change Directory (cd)
+
+Input: mkdir test_dir, then cd test_dir, then pwd.
+
+Expected: Output shows the path ending in /test_dir.
+
+Error Check: Type cd non_existent_folder.
+
+Expected: mysh cd error: No such file or directory.
+
+Built-in: Exit
+
+Input: exit.
+
+Expected: "Exiting shell..." prints, and the program terminates.
+
+II. I/O Redirection (Phase 4 Verification)
+These tests verify that open() and dup2() are correctly routing data.
+
+Output Redirection (>)
+
+Input: echo "Hello Shell" > test.txt.
+
+Expected: Nothing prints to the screen.
+
+Verification: Run cat test.txt. It should contain "Hello Shell".
+
+Append Redirection (>>)
+
+Input: echo "Line 2" >> test.txt.
+
+Expected: Nothing prints to the screen.
+
+Verification: Run cat test.txt. It should show both "Hello Shell" and "Line 2".
+
+Input Redirection (<)
+
+Input: wc -l < test.txt.
+
+Expected: Prints 2 (or the correct line count) to the screen.
+
+Combined Redirection
+
+Input: sort < test.txt > sorted.txt.
+
+Expected: A new file sorted.txt is created containing the lines of test.txt in alphabetical order.
+
+III. Background Processing (Phase 5 Verification)
+These tests verify that your WNOHANG "reaper" logic and skip-wait logic are functional.
+
+Asynchronous Execution
+
+Input: sleep 10 &.
+
+Expected: The shell immediately prints [1] Started background job: sleep (PID: XXXX) and returns the mysh> prompt.
+
+Responsiveness: Type ls while the sleep is running. The ls results should appear immediately.
+
+Zombie Reaping
+
+Action: Wait at least 10 seconds for the sleep to finish, then press Enter.
+
+Expected: The prompt appears with the message [1] finished (PID: XXXX).
+
+Why: This proves reap_background_processes() successfully caught the finished job during the loop iteration.
+
+IV. Final Polish & Edge Cases
+Empty Input: Press Enter on an empty line.
+
+Expected: No crash; it should simply show a new prompt.
+
+Redirection Error: ls > /restricted_root_file.
+
+Expected: mysh: redirection error: Permission denied (or similar).
+
+Clean Exit with Active Jobs:
+
+Action: Run sleep 100 &, then type exit.
+
+Expected: Shell exits. (Because of your kill loop in CMD_EXIT, the sleep process is terminated).
