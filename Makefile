@@ -8,8 +8,8 @@ all: mysh
 
 # Rule to build the executable
 mysh: main.c
-	$(CC) $(CFLAGS) -o mysh main.c
-
+	$(CC) $(CFLAGS) -o mysh main.c parser.c executor.c
+	
 # Target: clean
 # Description: Remove binaries and object files
 clean:

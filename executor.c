@@ -7,6 +7,9 @@
 #include <linux/limits.h>
 #include "mysh.h"
 
+#define MAX_BG_JOBS 100
+pid_t bg_pids[MAX_BG_JOBS] = {0};
+
 /**
  * @brief Determines the type of command.
  */
@@ -113,12 +116,30 @@ void execute_external_command(Command *cmd)
     {
         if (cmd->background)
         {
-            printf("[job %d] %d\n", pid, pid);
+            for (int i = 0; i < MAX_BG_JOBS; i++)
+            {
+                if (bg_pids[i] == 0)
+                {
+                    bg_pids[i] = pid; 
+                    printf("[%d] Started background job: %s (PID: %d)\n", 
+                           i + 1, cmd->command, pid);
+                    break;
+                }
+            }
         }
         else
         {
             int status;
             waitpid(pid, &status, 0);
+            
+            if (WIFEXITED(status)) 
+            {
+                int exit_code = WEXITSTATUS(status);
+                if (exit_code != 0 && exit_code != 127) 
+                {
+                    printf("Command exited with code %d\n", exit_code);
+                }
+            }
         }
     }
 }
@@ -133,13 +154,25 @@ void execute_command(Command *cmd)
     execute_external_command(cmd);
 }
 
-// make array of job pids and reap them in the main loop
+/**
+ * @brief Checks for any finished background processes and reaps them.
+ * WNOHANG prevents waitpid from blocking, allowing the shell to immediately skip unfinished jobs and stay responsive instead of freezing until they finish.
+ */
 void reap_background_processes(void)
 {
     int status;
-    pid_t pid;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+    
+    for (int i = 0; i < MAX_BG_JOBS; i++)
     {
-        printf("[job %d] finished\n", pid);
+        if (bg_pids[i] > 0) 
+        {
+            pid_t result = waitpid(bg_pids[i], &status, WNOHANG);
+            
+            if (result > 0) 
+            {
+                printf("[%d] finished (PID: %d)\n", i + 1, bg_pids[i]);
+                bg_pids[i] = 0; 
+            }
+        }
     }
 }

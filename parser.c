@@ -3,7 +3,6 @@
 #include <string.h>
 #include "mysh.h"
 
-// TODO: Make token persist in next job, make it return pointer to command, maybe make a copy of token
 /**
  * @brief Parses raw input into a Command struct.
  * @param input Raw input string from fgets.

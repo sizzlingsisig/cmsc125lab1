@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mysh.h"
-#include "executor.c"
-#include "parser.c"
 
 int main()
 {
