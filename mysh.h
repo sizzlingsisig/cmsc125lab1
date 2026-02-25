@@ -6,6 +6,8 @@
 #define MAX_CMD_LEN 1024
 #define MAX_ARGS 256
 #define DEFAULT_FILE_MODE 0644
+#define MAX_BG_JOBS 100
+
 
 /**
  * @struct Command
